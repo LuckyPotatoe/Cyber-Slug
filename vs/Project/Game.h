@@ -26,21 +26,21 @@ namespace Engine {
 		~Game();
 		void SetBackgroundColor(int r, int g, int b);
 		void Run();
-	
 	protected:
 		Setting* setting;
 		State state;
 		unsigned int currentFrameRate = 0;
-		mat4 defaultProjection;
-		Shader* defaultSpriteShader;
-		Shader* defaultTextShader;
-		Quad* defaultQuad;
 		Input* inputManager;
 		
 		mat4 CreateDefaultProjection();
 		Shader* CreateDefaultSpriteShader();
 		Shader* CreateDefaultTextShader();
 		float GetGameTime();
+
+		mat4 defaultProjection;
+		Shader* defaultSpriteShader;
+		Shader* defaultTextShader;
+		Quad* defaultQuad;
 
 		virtual void Init() = 0;
 		virtual void Update() = 0;

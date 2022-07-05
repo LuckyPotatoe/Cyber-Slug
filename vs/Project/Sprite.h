@@ -19,6 +19,7 @@ namespace Engine {
 	class Sprite
 	{
 	public:
+		Sprite();
 		Sprite(Texture* texture, Shader* shader, Quad* quad);
 		~Sprite();
 		void Draw();

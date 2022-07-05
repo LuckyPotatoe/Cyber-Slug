@@ -3,7 +3,6 @@
 
 using namespace Engine;
 
-
 Sprite::Sprite(Texture* texture, Shader* shader, Quad* quad)
 {
 	this->texture = texture;
@@ -167,8 +166,6 @@ vec2 Engine::Sprite::GetPosition()
 {
 	return position;
 }
-
-
 
 mat4 Sprite::CreateTransform()
 {

@@ -207,7 +207,7 @@ void Demo::Render()
 	text->Draw();
 }
 
-
+/*
 int main(int argc, char** argv) {
 	Setting* setting = new Setting();
 	setting->windowTitle = "Project Example";
@@ -220,4 +220,4 @@ int main(int argc, char** argv) {
 	delete game;
 
 	return 0;
-}
+}*/
