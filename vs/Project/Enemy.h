@@ -3,6 +3,9 @@
 #include "Consts.h"
 #include "Sprite.h"
 
+extern float animationFrameFac;
+extern float spriteScaleFac;
+
 namespace Engine {
 	class Enemy
 	{
@@ -14,6 +17,7 @@ namespace Engine {
 		void SpawnPlayer(float x, float y);
 		void Shoot();
 	private:
-		Sprite* sprite = NULL;
+		Sprite* enemy = NULL;
+		CharacterState state;
 	};
 }

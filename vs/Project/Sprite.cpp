@@ -1,6 +1,5 @@
 #include "Sprite.h"
 
-
 using namespace Engine;
 
 Sprite::Sprite(Texture* texture, Shader* shader, Quad* quad)

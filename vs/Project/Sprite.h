@@ -60,7 +60,6 @@ namespace Engine {
 		vec2 position, boundingBoxSize;
 		vector<AnimData*> animationData;
 		AnimData* currentAnim = NULL;
-		
 	};
 }
 

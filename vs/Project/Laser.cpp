@@ -4,24 +4,75 @@ using namespace Engine;
 
 Laser::Laser(Sprite* sprite)
 {
-	this->laserPrefab = sprite;
-	laserPrefab->SetNumXFrames(4);
-	laserPrefab->SetNumYFrames(1);
-	laserPrefab->SetAnimationDuration(60 * animationFrameFac);
-	laserPrefab->AddAnimation("pulse", 0, 3);
-	laserPrefab->SetScale(spriteScaleFac);
+	this->laser = sprite;
+	state = GameObjectState::ALIVE;
 }
 
 Laser::~Laser()
 {
+	delete laser;
 }
 
-Laser* InstantiateLaser() {
-	Laser* laser = new Laser(laserPrefab);
+void Laser::Update(float deltaTime)
+{
+	if (state == GameObjectState::DEAD) {
+		return;
+	}
 
-	return laser;
+	float xPos = GetX();
+	float yPos = GetY();
+	float velocity = 50;
+
+	// TODO: Laser behaviour
+	laser->SetPosition(xPos + velocity, yPos);
 }
 
-void Laser::LaserSpawn(float x, float y) {
-	Laser* laser = InstantiateLaser();
+void Laser::Draw()
+{
+	// Self-destruct
+	if (state == GameObjectState::ALIVE) {
+		laser->Draw();
+	}
+	else {
+		return;
+	}
+}
+
+void Laser::SetSpawn(float x, float y) {
+	laser->SetPosition(x, y);
+}
+
+float Laser::GetWidth()
+{
+	return laser->GetScaleWidth();
+}
+
+float Laser::GetHeight()
+{
+	return laser->GetScaleHeight();
+}
+
+GameObjectState Laser::GetState()
+{
+	return state;
+}
+
+bool Laser::IsDead()
+{
+	return Engine::GameObjectState::DEAD == state;;
+}
+
+float Laser::GetX()
+{
+	return laser->GetPosition().x;
+}
+
+float Laser::GetY()
+{
+	return laser->GetPosition().y;
+}
+
+float Laser::GetRot()
+{
+	return laser->GetRotation();
 }

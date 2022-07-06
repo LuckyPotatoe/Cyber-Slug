@@ -3,16 +3,27 @@
 #include "Consts.h"
 #include "Sprite.h"
 
+extern float animationFrameFac;
+extern float characterSpeedFac;
+
 namespace Engine {
 	class Laser {
 	public:
 		Laser(Sprite* sprite);
 		~Laser();
-		
-		void LaserSpawn(float x, float y);
-	protected:
-		Laser* InstantiateLaser();
+		void Update(float deltaTime);
+		void Draw();
+
+		void SetSpawn(float x, float y);
+		float GetX();
+		float GetY();
+		float GetRot();
+		float GetWidth();
+		float GetHeight();
+		GameObjectState GetState();
+		bool IsDead();
 	private:
-		Sprite* laserPrefab = NULL;
+		Sprite* laser = NULL;
+		GameObjectState state;
 	};
 }
