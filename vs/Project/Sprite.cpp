@@ -223,6 +223,3 @@ void Engine::Sprite::SetBoundingBoxSize(float w, float h)
 	boundingBoxSize.x = w;
 	boundingBoxSize.y = h;
 }
-
-
-

@@ -15,8 +15,9 @@
 #include "Laser.h"
 
 extern float animationFrameFac;
+
 extern float characterSpeedFac;
-extern float spriteScaleFac;
+extern float characterScaleFac;
 
 namespace Engine {
 	const enum GameState {
@@ -46,41 +47,62 @@ namespace Engine {
 		void UpdateInGame();
 		void UpdatePause();
 
+		void DestroyPreMenu();
+		void DestroyMenu();
+		void DestroyInGame();
+		void DestroyPause();
+
 		Sprite* CreateLaser();
 		Sprite* CreateEnemy();
 	private:
+	// States
 		GameState state = GameState::PREMENU;
-		bool initFlag = false;
+		bool stateSwitchFlag = false;
+
+	// Control Variable
+		float maxShootSpeed = 240;
+		float shootCounter = 0;
+
+		// TODO: Put this in main?
+		vec2 playerPos;
+		float playerRot;
+		Orientation playerOrient;
 
 	// Graphics
 		// UI
 		Texture* logoTexture;
-		Sprite* logo;
+		Sprite* logo = NULL;
 
 		Texture* menuTexture;
-		Sprite* playButton;
-		Sprite* exitButton;
+		Sprite* playButton = NULL;
+		Sprite* exitButton = NULL;
 
 		// Text
-		Text* preMenuText;
-		Text* playText;
-		Text* exitText;
+		Text* preMenuText = NULL;
+		Text* playText = NULL;
+		Text* exitText = NULL;
 	 
 		// Background
 		Texture* backgroundTexture;
-		Sprite* background;
+		Sprite* background = NULL;
 
 		// Platform
 		//Texture* floorTexture = new Texture("");
 		//Sprite* floor = new Sprite(floorTexture, defaultSpriteShader, defaultQuad);
 
+		// Bounding Box
+		Texture* dot = NULL;
+
+		Sprite* dotSprite1 = NULL;
+		Sprite* dotSprite2 = NULL;
+		Sprite* dotSprite3 = NULL;
+		Sprite* dotSprite4 = NULL;
+
+		BoundingBox* playerBB = NULL;
+
 		// Character
 		Texture* playerTexture;
-		Sprite* player;
-
-		// TODO: Put this in main?
-		vec2 playerPos;
-		float playerRot;
+		Sprite* player = NULL;
 
 		//Enemy
 		Texture* enemyTexture;

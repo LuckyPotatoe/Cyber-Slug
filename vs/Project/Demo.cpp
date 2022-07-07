@@ -190,9 +190,6 @@ void Demo::Update()
 		bb->GetVertices()[2].y - (0.5f * dotSprite3->GetScaleHeight()));
 	dotSprite4->SetPosition(bb->GetVertices()[3].x - (0.5f * dotSprite4->GetScaleWidth()), 
 		bb->GetVertices()[3].y - (0.5f * dotSprite3->GetScaleHeight()));
-
-
-
 }
 
 void Demo::Render()

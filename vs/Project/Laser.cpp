@@ -2,10 +2,11 @@
 
 using namespace Engine;
 
-Laser::Laser(Sprite* sprite)
+Laser::Laser(Sprite* sprite, Orientation orient)
 {
-	this->laser = sprite;
 	state = GameObjectState::ALIVE;
+	this->laser = sprite;
+	this->orient = orient;
 }
 
 Laser::~Laser()
@@ -19,12 +20,17 @@ void Laser::Update(float deltaTime)
 		return;
 	}
 
-	float xPos = GetX();
-	float yPos = GetY();
+	vec2 pos = GetPosition();
 	float velocity = 50;
 
-	// TODO: Laser behaviour
-	laser->SetPosition(xPos + velocity, yPos);
+	if (orient == Orientation::RIGHT) {
+		laser->SetPosition(pos.x + velocity, pos.y);
+	}
+	else if (orient == Orientation::LEFT) {
+		laser->SetPosition(pos.x - velocity, pos.y);
+	}
+
+	laser->Update(deltaTime);
 }
 
 void Laser::Draw()
@@ -40,6 +46,11 @@ void Laser::Draw()
 
 void Laser::SetSpawn(float x, float y) {
 	laser->SetPosition(x, y);
+}
+
+void Engine::Laser::SetState(GameObjectState state)
+{
+	this->state = state;
 }
 
 float Laser::GetWidth()
@@ -62,14 +73,9 @@ bool Laser::IsDead()
 	return Engine::GameObjectState::DEAD == state;;
 }
 
-float Laser::GetX()
+vec2 Laser::GetPosition()
 {
-	return laser->GetPosition().x;
-}
-
-float Laser::GetY()
-{
-	return laser->GetPosition().y;
+	return laser->GetPosition();
 }
 
 float Laser::GetRot()

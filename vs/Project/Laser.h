@@ -9,14 +9,14 @@ extern float characterSpeedFac;
 namespace Engine {
 	class Laser {
 	public:
-		Laser(Sprite* sprite);
+		Laser(Sprite* sprite, Orientation orient);
 		~Laser();
 		void Update(float deltaTime);
 		void Draw();
 
 		void SetSpawn(float x, float y);
-		float GetX();
-		float GetY();
+		void SetState(GameObjectState state);
+		vec2 GetPosition();
 		float GetRot();
 		float GetWidth();
 		float GetHeight();
@@ -25,5 +25,6 @@ namespace Engine {
 	private:
 		Sprite* laser = NULL;
 		GameObjectState state;
+		Orientation orient = Orientation::RIGHT;
 	};
 }

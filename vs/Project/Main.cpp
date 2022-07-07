@@ -37,18 +37,18 @@ void Main::Init()
 void Main::Update()
 {
 // GameState Switch
-	if (initFlag) {
+	if (stateSwitchFlag) {
 		if (state == GameState::MENU) {
 			InitMenu();
-			initFlag = false;
+			stateSwitchFlag = false;
 		}
 		else if (state == GameState::GAME) {
 			InitInGame();
-			initFlag = false;
+			stateSwitchFlag = false;
 		}
 		else if (state == GameState::PAUSE) {
 			InitPause();
-			initFlag = false;
+			stateSwitchFlag = false;
 		}
 	}
 
@@ -70,22 +70,36 @@ void Main::Update()
 void Main::Render()
 {
 	if (state == GameState::PREMENU) {
+		if (logo == NULL || preMenuText == NULL) {
+			return;
+		}
 		logo->Draw();
 		preMenuText->Draw();
 	}
 	else if (state == GameState::MENU) {
+		if (playButton == NULL || exitButton == NULL || player == NULL) {
+			return;
+		}
 		playButton->Draw();
 		exitButton->Draw();	
 
 		player->Draw();
 
-		// TODO: Bullet list loop draw call.
+		dotSprite1->Draw();
+		dotSprite2->Draw();
+		dotSprite3->Draw();
+		dotSprite4->Draw();
+
 		for (Laser* laser: laserList) {
-			laser->Draw();
+			if (laser != NULL) {
+				laser->Draw();
+			}
 		}
 	}
 	else if (state == GameState::GAME) {
-		background->Draw();
+		if (background != NULL) {
+			background->Draw();
+		}
 		//floor->Draw();
 	}
 	else if (state == GameState::PAUSE) {
@@ -97,14 +111,12 @@ void Engine::Main::InitPreMenu()
 {
 	SetBackgroundColor(120, 120, 120);
 
-	// Logo
 	logoTexture = new Texture("logo.png");
 	logo = new Sprite(logoTexture, defaultSpriteShader, defaultQuad);
 
 	logo->SetPosition(100, 600);
 	logo->SetScale(0.8);
 
-	// Text
 	preMenuText = new Text("Abaddon Bold.ttf", 30, defaultTextShader);
 	preMenuText->SetColor(255, 255, 255);
 	preMenuText->SetText("Press space key to continue...");
@@ -115,7 +127,6 @@ void Engine::Main::InitPreMenu()
 
 void Engine::Main::InitMenu()
 {
-	// Menu
 	menuTexture = new Texture("menu.png");
 
 	playButton = new Sprite(menuTexture, defaultSpriteShader, defaultQuad);
@@ -150,11 +161,15 @@ void Engine::Main::InitMenu()
 	player->AddAnimation("run_aim", 18, 23);
 	player->AddAnimation("jump", 24, 27);
 	player->AddAnimation("jump_aim", 30, 33);
-	player->SetScale(spriteScaleFac);
-	// Boundingbox goes here
-	// 
-	// Enemy
-	//enemyTexture = new Texture("");
+	player->SetScale(characterScaleFac);
+	player->SetBoundingBoxSize(player->GetScaleWidth() / 1.7, player->GetScaleHeight());
+
+	dot = new Texture("dot.png");
+
+	dotSprite1 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite2 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite3 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite4 = new Sprite(dot, defaultSpriteShader, defaultQuad);
 
 	// Laser
 	laserTexture = new Texture("bullet_trail.png");
@@ -166,6 +181,9 @@ void Engine::Main::InitMenu()
 
 void Engine::Main::InitInGame()
 {
+	// Enemy
+	enemyTexture = new Texture("");
+
 	// Background
 	backgroundTexture = new Texture("cyber_sunrise.png");
 	background = new Sprite(backgroundTexture, defaultSpriteShader, defaultQuad);
@@ -179,7 +197,9 @@ void Engine::Main::InitPause()
 void Engine::Main::UpdatePreMenu()
 {
 	if (inputManager->IsKeyReleased("space")) {
-		//state = GameState::MENU;
+		state = GameState::MENU;
+		stateSwitchFlag = true;
+		DestroyPreMenu();
 	}
 }
 
@@ -191,8 +211,12 @@ void Engine::Main::UpdateMenu()
 
 	player->Update(GetGameTime());
 
+	// TODO: Laser delete call.
 	for (Laser* laser : laserList) {
 		laser->Update(GetGameTime());
+		if (laser->GetPosition().x < 0 || laser->GetPosition().x > setting->screenWidth) {
+			laser->SetState(GameObjectState::DEAD);
+		}
 	}
 
 	// Graphic
@@ -204,51 +228,72 @@ void Engine::Main::UpdateMenu()
 
 	// Gravity
 	// TODO: Gravity
-	// TODO: Bullet minimum shooting time
 	if (inputManager->IsKeyPressed("right")) {
+		playerOrient = Orientation::RIGHT;
 		player->SetPosition(playerPos.x + characterSpeedFac, playerPos.y);
-		player->SetFlipHorizontal((playerRot == -180 ? 1 : 0));
+		player->SetFlipHorizontal(0);
 		player->PlayAnim("run");
 		if (inputManager->IsKeyPressed("space")) {
 			cout << "pewpew!";
-
-			//bullet->SetPosition(playerPos.x + 10, playerPos.y);
-
-			sfxShoot->Play(false);
 			player->PlayAnim("run_aim");
+
+			if (shootCounter > maxShootSpeed) {
+				laserList.push_back(new Laser(CreateLaser(), playerOrient));
+				sfxShoot->Play(false);
+				shootCounter = 0;
+			}
+			else {
+				shootCounter += GetGameTime();
+			}
 		}
 	}
 	else if (inputManager->IsKeyPressed("left")) {
+		playerOrient = Orientation::LEFT;
 		player->SetPosition(playerPos.x - characterSpeedFac, playerPos.y);
-		player->SetFlipHorizontal((playerRot == 0) ? 1 : 0);
+		player->SetFlipHorizontal(1);
 		player->PlayAnim("run");
 		if (inputManager->IsKeyPressed("space")) {
 			cout << "pewpew!";
-
-			//bullet->SetPosition(playerPos.x - 10, playerPos.y);
-
-			sfxShoot->Play(false);
 			player->PlayAnim("run_aim");
+
+			if (shootCounter > maxShootSpeed) {
+				laserList.push_back(new Laser(CreateLaser(), playerOrient));
+				sfxShoot->Play(false);
+				shootCounter = 0;
+			}
+			else {
+				shootCounter += GetGameTime();
+			}
 		}
 	}
 	else if (inputManager->IsKeyPressed("up")) {
 		player->PlayAnim("jump");
 		if (inputManager->IsKeyPressed("space")) {
 			cout << "pewpew!";
-
-			//bullet->SetPosition(playerPos.x + 10, playerPos.y);
-
-			sfxShoot->Play(false);
 			player->PlayAnim("jump_aim");
+
+			if (shootCounter > maxShootSpeed) {
+				laserList.push_back(new Laser(CreateLaser(), playerOrient));
+				sfxShoot->Play(false);
+				shootCounter = 0;
+			}
+			else {
+				shootCounter += GetGameTime();
+			}
 		}
 	}
 	else if (inputManager->IsKeyPressed("space")) {
 		cout << "pewpew!";
-
-		laserList.push_back(new Laser(CreateLaser()));
-
-		sfxShoot->Play(false);
 		player->PlayAnim("idle_aim");
+
+		if (shootCounter > maxShootSpeed) {
+			laserList.push_back(new Laser(CreateLaser(), playerOrient));
+			sfxShoot->Play(false);
+			shootCounter = 0;
+		}
+		else {
+			shootCounter += GetGameTime();
+		}
 	}
 
 	if (inputManager->IsKeyReleased("mute")) {
@@ -265,6 +310,17 @@ void Engine::Main::UpdateMenu()
 	if (inputManager->IsKeyReleased("debug")) {
 		cout << setting->screenHeight << ", " << setting->screenWidth;
 	}
+
+	playerBB = player->GetBoundingBox();
+
+	dotSprite1->SetPosition(playerBB->GetVertices()[0].x - (0.5f * dotSprite1->GetScaleWidth()),
+		playerBB->GetVertices()[0].y - (0.5f * dotSprite1->GetScaleHeight()));
+	dotSprite2->SetPosition(playerBB->GetVertices()[1].x - (0.5f * dotSprite2->GetScaleWidth()),
+		playerBB->GetVertices()[1].y - (0.5f * dotSprite2->GetScaleHeight()));
+	dotSprite3->SetPosition(playerBB->GetVertices()[2].x - (0.5f * dotSprite3->GetScaleWidth()),
+		playerBB->GetVertices()[2].y - (0.5f * dotSprite3->GetScaleHeight()));
+	dotSprite4->SetPosition(playerBB->GetVertices()[3].x - (0.5f * dotSprite4->GetScaleWidth()),
+		playerBB->GetVertices()[3].y - (0.5f * dotSprite3->GetScaleHeight()));
 }
 
 void Engine::Main::UpdateInGame()
@@ -275,16 +331,42 @@ void Engine::Main::UpdatePause()
 {
 }
 
+void Engine::Main::DestroyPreMenu()
+{
+	delete logo;
+	delete logoTexture;
+	delete preMenuText;
+}
+
+void Engine::Main::DestroyMenu()
+{
+}
+
+void Engine::Main::DestroyInGame()
+{
+}
+
+void Engine::Main::DestroyPause()
+{
+}
+
 Sprite* Main::CreateLaser() {
 	Sprite* laser = new Sprite(laserTexture, defaultSpriteShader, defaultQuad);
 	laser->SetNumXFrames(4);
 	laser->SetNumYFrames(1);
-	laser->SetAnimationDuration(60 * animationFrameFac);
+	laser->SetAnimationDuration(15);
 	laser->AddAnimation("pulse", 0, 3);
-	laser->SetScale(spriteScaleFac);
+	laser->SetScale(1.8);
 	laser->PlayAnim("pulse");
-
-	laser->SetPosition(playerPos.x + 34, playerPos.y);
+	
+	// Position correction for the gun barrel
+	if (playerOrient == Orientation::RIGHT) {
+		laser->SetPosition(playerPos.x + 100, playerPos.y + 30);
+	}
+	else if (playerOrient == Orientation::LEFT) {
+		laser->SetPosition(playerPos.x - 100, playerPos.y + 30);
+		laser->SetFlipHorizontal(1);
+	}
 
 	return laser;
 }
