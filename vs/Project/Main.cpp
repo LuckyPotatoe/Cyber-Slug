@@ -38,48 +38,50 @@ void Main::Update()
 {
 // GameState Switch
 	if (stateSwitchFlag) {
-		if (state == GameState::MENU) {
+		if (gameState == GameState::MENU) {
 			InitMenu();
 			stateSwitchFlag = false;
 		}
-		else if (state == GameState::GAME) {
+		else if (gameState == GameState::GAME) {
 			InitInGame();
 			stateSwitchFlag = false;
 		}
-		else if (state == GameState::PAUSE) {
+		else if (gameState == GameState::PAUSE) {
 			InitPause();
 			stateSwitchFlag = false;
 		}
 	}
 
 // State Update
-	if (state == GameState::PREMENU) {
+	if (gameState == GameState::PREMENU) {
 		UpdatePreMenu();
 	}
-	else if (state == GameState::MENU) {
+	else if (gameState == GameState::MENU) {
 		UpdateMenu();
 	}
-	else if (state == GameState::GAME) {
+	else if (gameState == GameState::GAME) {
 		UpdateInGame();
 	}
-	else if (state == GameState::PAUSE) {
+	else if (gameState == GameState::PAUSE) {
 		UpdatePause();
 	}
 }
 
 void Main::Render()
 {
-	if (state == GameState::PREMENU) {
+	if (gameState == GameState::PREMENU) {
 		if (logo == NULL || preMenuText == NULL) {
 			return;
 		}
 		logo->Draw();
 		preMenuText->Draw();
 	}
-	else if (state == GameState::MENU) {
+	else if (gameState == GameState::MENU) {
 		if (playButton == NULL || exitButton == NULL || player == NULL) {
 			return;
 		}
+		floor->Draw();
+		
 		playButton->Draw();
 		exitButton->Draw();	
 
@@ -89,6 +91,11 @@ void Main::Render()
 		dotSprite2->Draw();
 		dotSprite3->Draw();
 		dotSprite4->Draw();
+		
+		dotSprite5->Draw();
+		dotSprite6->Draw();
+		dotSprite7->Draw();
+		dotSprite8->Draw();
 
 		for (Laser* laser: laserList) {
 			if (laser != NULL) {
@@ -96,13 +103,16 @@ void Main::Render()
 			}
 		}
 	}
-	else if (state == GameState::GAME) {
+	else if (gameState == GameState::GAME) {
 		if (background != NULL) {
 			background->Draw();
 		}
-		//floor->Draw();
+
+		if (scoreText != NULL) {
+			scoreText->Draw();
+		}
 	}
-	else if (state == GameState::PAUSE) {
+	else if (gameState == GameState::PAUSE) {
 
 	}
 }
@@ -146,30 +156,25 @@ void Engine::Main::InitMenu()
 	exitButton->PlayAnim("idle");
 	exitButton->SetPosition(100, (setting->screenHeight / 2) - (playButton->GetScaleHeight() + 20));
 	exitButton->SetScale(4);
+// Stage
+	dot = new Texture("dot.png");
+
+	floor = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	floor->SetScale(1);
+	floor->SetBoundingBoxSize(setting->screenWidth * 2, 50);
 
 // Graphic
-	//Character
-	// TODO: Separate character class.
-	playerTexture = new Texture("character.png");
-	player = new Sprite(playerTexture, defaultSpriteShader, defaultQuad);
-	player->SetNumXFrames(6);
-	player->SetNumYFrames(6);
-	player->SetAnimationDuration(60 * animationFrameFac);
-	player->AddAnimation("idle", 0, 3);
-	player->AddAnimation("idle_aim", 6, 9);
-	player->AddAnimation("run", 12, 17);
-	player->AddAnimation("run_aim", 18, 23);
-	player->AddAnimation("jump", 24, 27);
-	player->AddAnimation("jump_aim", 30, 33);
-	player->SetScale(characterScaleFac);
-	player->SetBoundingBoxSize(player->GetScaleWidth() / 1.7, player->GetScaleHeight());
-
-	dot = new Texture("dot.png");
+	player = CreatePlayer();
 
 	dotSprite1 = new Sprite(dot, defaultSpriteShader, defaultQuad);
 	dotSprite2 = new Sprite(dot, defaultSpriteShader, defaultQuad);
 	dotSprite3 = new Sprite(dot, defaultSpriteShader, defaultQuad);
 	dotSprite4 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	
+	dotSprite5 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite6 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite7 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite8 = new Sprite(dot, defaultSpriteShader, defaultQuad);
 
 	// Laser
 	laserTexture = new Texture("bullet_trail.png");
@@ -181,13 +186,28 @@ void Engine::Main::InitMenu()
 
 void Engine::Main::InitInGame()
 {
-	// Enemy
-	enemyTexture = new Texture("");
+	spawnPointList = {
+		// High center falldown
+		{setting->screenWidth, setting->screenHeight + 25},
+		// Down leftmost point
+		{-20, 0},
+		// down lightmost point
+		{(setting->screenWidth * 2) + 20, 0}
+	};
 
 	// Background
 	backgroundTexture = new Texture("cyber_sunrise.png");
 	background = new Sprite(backgroundTexture, defaultSpriteShader, defaultQuad);
 	background->SetPosition(0, 0);
+
+	//Text
+	scoreText = new Text("Abaddon Bold.ttf", 30, defaultTextShader);
+	scoreText->SetText("Score: " + to_string(score));
+	scoreText->SetPosition(50, setting->screenHeight - 50);
+
+	// Enemy
+	// TODO: Change texture to actual enemy texture
+	enemyTexture = new Texture("character.png");
 }
 
 void Engine::Main::InitPause()
@@ -197,7 +217,8 @@ void Engine::Main::InitPause()
 void Engine::Main::UpdatePreMenu()
 {
 	if (inputManager->IsKeyReleased("space")) {
-		state = GameState::MENU;
+		// TODO: Change this back to GameState::MENU
+		gameState = GameState::GAME;
 		stateSwitchFlag = true;
 		DestroyPreMenu();
 	}
@@ -223,77 +244,86 @@ void Engine::Main::UpdateMenu()
 	player->PlayAnim("idle");
 
 	//Input Handling
+	lastPlayerPos = playerPos;
 	playerPos = player->GetPosition();
 	playerRot = player->GetRotation();
 
-	// Gravity
-	// TODO: Gravity
+	UpdatePhysics();
+
+	// TODO: Air control
+	// TODO: Character state handling
+	// TODO: Momentum system
 	if (inputManager->IsKeyPressed("right")) {
 		playerOrient = Orientation::RIGHT;
+		if (isMoving) {
+			acceleration = 1;
+		}
+		else if (isMoving == false) {
+			acceleration = 0;
+		}
+
 		player->SetPosition(playerPos.x + characterSpeedFac, playerPos.y);
 		player->SetFlipHorizontal(0);
 		player->PlayAnim("run");
+		UpdatePhysics();
 		if (inputManager->IsKeyPressed("space")) {
-			cout << "pewpew!";
 			player->PlayAnim("run_aim");
-
-			if (shootCounter > maxShootSpeed) {
-				laserList.push_back(new Laser(CreateLaser(), playerOrient));
-				sfxShoot->Play(false);
-				shootCounter = 0;
+			Shoot();
+			if (inputManager->IsKeyReleased("up") && isFalling != true) {
+				player->PlayAnim("jump_aim");
+				player->SetPosition(playerPos.x, playerPos.y + 100);
 			}
-			else {
-				shootCounter += GetGameTime();
+		}
+		else if (inputManager->IsKeyReleased("up") && isFalling != true) {
+			player->PlayAnim("jump");
+			player->SetPosition(playerPos.x, playerPos.y + 100);
+			if (inputManager->IsKeyPressed("space")) {
+				player->PlayAnim("jump_aim");
+				Shoot();
 			}
 		}
 	}
 	else if (inputManager->IsKeyPressed("left")) {
 		playerOrient = Orientation::LEFT;
+		if (isMoving) {
+			acceleration = 1;
+		}
+		else if (isMoving == false) {
+			acceleration = 0;
+		}
+
 		player->SetPosition(playerPos.x - characterSpeedFac, playerPos.y);
 		player->SetFlipHorizontal(1);
 		player->PlayAnim("run");
+		UpdatePhysics();
 		if (inputManager->IsKeyPressed("space")) {
-			cout << "pewpew!";
 			player->PlayAnim("run_aim");
-
-			if (shootCounter > maxShootSpeed) {
-				laserList.push_back(new Laser(CreateLaser(), playerOrient));
-				sfxShoot->Play(false);
-				shootCounter = 0;
+			Shoot();
+			if (inputManager->IsKeyReleased("up") && isFalling != true) {
+				player->PlayAnim("jump_aim");
+				player->SetPosition(playerPos.x, playerPos.y + 100);
 			}
-			else {
-				shootCounter += GetGameTime();
+		}
+		else if (inputManager->IsKeyReleased("up") && isFalling != true) {
+			player->PlayAnim("jump");
+			player->SetPosition(playerPos.x, playerPos.y + 100);
+			if (inputManager->IsKeyPressed("space")) {
+				player->PlayAnim("jump_aim");
+				Shoot();
 			}
 		}
 	}
-	else if (inputManager->IsKeyPressed("up")) {
+	else if (inputManager->IsKeyReleased("up") && isFalling != true) {
 		player->PlayAnim("jump");
+		player->SetPosition(playerPos.x, playerPos.y + 100);
 		if (inputManager->IsKeyPressed("space")) {
-			cout << "pewpew!";
 			player->PlayAnim("jump_aim");
-
-			if (shootCounter > maxShootSpeed) {
-				laserList.push_back(new Laser(CreateLaser(), playerOrient));
-				sfxShoot->Play(false);
-				shootCounter = 0;
-			}
-			else {
-				shootCounter += GetGameTime();
-			}
+			Shoot();
 		}
 	}
 	else if (inputManager->IsKeyPressed("space")) {
-		cout << "pewpew!";
 		player->PlayAnim("idle_aim");
-
-		if (shootCounter > maxShootSpeed) {
-			laserList.push_back(new Laser(CreateLaser(), playerOrient));
-			sfxShoot->Play(false);
-			shootCounter = 0;
-		}
-		else {
-			shootCounter += GetGameTime();
-		}
+		Shoot();
 	}
 
 	if (inputManager->IsKeyReleased("mute")) {
@@ -308,7 +338,7 @@ void Engine::Main::UpdateMenu()
 	}
 
 	if (inputManager->IsKeyReleased("debug")) {
-		cout << setting->screenHeight << ", " << setting->screenWidth;
+		cout << setting->screenWidth << ", " << setting->screenHeight;
 	}
 
 	playerBB = player->GetBoundingBox();
@@ -321,33 +351,124 @@ void Engine::Main::UpdateMenu()
 		playerBB->GetVertices()[2].y - (0.5f * dotSprite3->GetScaleHeight()));
 	dotSprite4->SetPosition(playerBB->GetVertices()[3].x - (0.5f * dotSprite4->GetScaleWidth()),
 		playerBB->GetVertices()[3].y - (0.5f * dotSprite3->GetScaleHeight()));
+	
+	floorBB = floor->GetBoundingBox();
+	
+	dotSprite5->SetPosition(floorBB->GetVertices()[0].x - (0.5f * dotSprite5->GetScaleWidth()),
+		floorBB->GetVertices()[0].y - (0.5f * dotSprite5->GetScaleHeight()));
+	dotSprite6->SetPosition(floorBB->GetVertices()[1].x - (0.5f * dotSprite6->GetScaleWidth()),
+		floorBB->GetVertices()[1].y - (0.5f * dotSprite6->GetScaleHeight()));
+	dotSprite7->SetPosition(floorBB->GetVertices()[2].x - (0.5f * dotSprite7->GetScaleWidth()),
+		floorBB->GetVertices()[2].y - (0.5f * dotSprite7->GetScaleHeight()));
+	dotSprite8->SetPosition(floorBB->GetVertices()[3].x - (0.5f * dotSprite8->GetScaleWidth()),
+		floorBB->GetVertices()[3].y - (0.5f * dotSprite8->GetScaleHeight()));
 }
 
 void Engine::Main::UpdateInGame()
 {
+	scoreText->SetText("Score: " + to_string(score));
+
+	// Score update per 3 frame-ish
+	if (scoreTimer > 360) {
+		score += 1;
+		scoreTimer = 0;
+	}
+	else {
+		scoreTimer += GetGameTime();
+	}
+
+	// TODO: Enemy Spawn
+	//enemyList.push_back(CreateEnemy());
 }
 
 void Engine::Main::UpdatePause()
 {
 }
 
-void Engine::Main::DestroyPreMenu()
+void Engine::Main::UpdatePhysics()
+{
+	if (lastPlayerPos.x != playerPos.x) {
+		isMoving = true;
+	}
+	else {
+		isMoving = false;
+	}
+	
+	if (lastPlayerPos.y > playerPos.y) {
+		isFalling = true;
+	}
+	else {
+		isFalling = false;
+	}
+
+	/* 
+	Acceleration: Simplifying the actual physics for a more 'arcadey' feeling not floaty.
+	Accel kicks into max value const the moment a movement is made (on ground),
+	it is made as a decay factor for momentum.
+	*/
+	if (acceleration = 0) {
+		momentum = simpleLerp(momentum, 0, 0.8);
+	}
+	else if (playerOrient == Orientation::RIGHT) {
+		// This is to avoid mid air direction switching
+		if (momentum >= 0) {
+			momentum = simpleLerp(momentum, 10, acceleration);
+		}
+	}
+	else if (playerOrient == Orientation::LEFT) {
+		if (momentum <= 0) {
+			momentum = simpleLerp(momentum, -10, acceleration);
+		}
+	}
+
+	// Gravity
+	if (player->GetBoundingBox()->CollideWith(floor->GetBoundingBox()) == false) {
+		player->SetPosition(playerPos.x + momentum, playerPos.y - gravity);
+	}
+	
+	// Floor correction
+	if (playerPos.y < 50) {
+		player->SetPosition(playerPos.x, 50);
+	}
+}
+
+void Main::DestroyPreMenu()
 {
 	delete logo;
 	delete logoTexture;
 	delete preMenuText;
 }
 
-void Engine::Main::DestroyMenu()
+void Main::DestroyMenu()
 {
 }
 
-void Engine::Main::DestroyInGame()
+void Main::DestroyInGame()
 {
 }
 
-void Engine::Main::DestroyPause()
+void Main::DestroyPause()
 {
+}
+
+Sprite* Main::CreatePlayer()
+{
+	playerTexture = new Texture("character.png");
+	player = new Sprite(playerTexture, defaultSpriteShader, defaultQuad);
+	player->SetNumXFrames(6);
+	player->SetNumYFrames(6);
+	player->SetAnimationDuration(60 * animationFrameFac);
+	player->AddAnimation("idle", 0, 3);
+	player->AddAnimation("idle_aim", 6, 9);
+	player->AddAnimation("run", 12, 17);
+	player->AddAnimation("run_aim", 18, 23);
+	player->AddAnimation("jump", 24, 27);
+	player->AddAnimation("jump_aim", 30, 33);
+	player->SetPosition(50, setting->screenHeight + 50);
+	player->SetScale(characterScaleFac);
+	player->SetBoundingBoxSize(player->GetScaleWidth() / 1.7, player->GetScaleHeight());
+
+	return player;
 }
 
 Sprite* Main::CreateLaser() {
@@ -358,13 +479,14 @@ Sprite* Main::CreateLaser() {
 	laser->AddAnimation("pulse", 0, 3);
 	laser->SetScale(1.8);
 	laser->PlayAnim("pulse");
+	laser->SetBoundingBoxSize(laser->GetScaleWidth(), laser->GetScaleHeight());
 	
 	// Position correction for the gun barrel
 	if (playerOrient == Orientation::RIGHT) {
-		laser->SetPosition(playerPos.x + 100, playerPos.y + 30);
+		laser->SetPosition(playerPos.x + 100, playerPos.y + 32);
 	}
 	else if (playerOrient == Orientation::LEFT) {
-		laser->SetPosition(playerPos.x - 100, playerPos.y + 30);
+		laser->SetPosition(playerPos.x - 100, playerPos.y + 32);
 		laser->SetFlipHorizontal(1);
 	}
 
@@ -384,6 +506,24 @@ Sprite* Main::CreateEnemy() {
 	enemy->AddAnimation("jump_aim", 30, 33);
 
 	return enemy;
+}
+
+void Main::Shoot()
+{
+	cout << "pewpew!";
+
+	if (shootCounter > maxShootSpeed) {
+		laserList.push_back(new Laser(CreateLaser(), playerOrient));
+		sfxShoot->Play(false);
+		shootCounter = 0;
+	}
+	else {
+		shootCounter += GetGameTime();
+	}
+}
+
+float Main::simpleLerp(float v0, float v1, float t){
+	return (1 - t) * v0 + t * v1;
 }
 
 int main(int argc, char** argv) {

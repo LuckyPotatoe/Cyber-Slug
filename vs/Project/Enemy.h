@@ -12,12 +12,23 @@ namespace Engine {
 	public:
 		Enemy(Sprite* sprite);
 		~Enemy();
+		void Update(float deltaTime);
+		void Draw();
 
-		// Core functions
-		void SpawnPlayer(float x, float y);
+		// Util functions
+		void SetSpawn(float x, float y);
+		void SetState(GameObjectState state);
+		vec2 GetPosition();
+		float GetRot();
+		float GetWidth();
+		float GetHeight();
+		GameObjectState GetState();
+		bool IsDead();
+
+		// Gameplay functions
 		void Shoot();
 	private:
 		Sprite* enemy = NULL;
-		CharacterState state;
+		GameObjectState state;
 	};
 }

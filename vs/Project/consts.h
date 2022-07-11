@@ -1,12 +1,6 @@
 #pragma once
 
 namespace Engine {
-	const enum class CharacterState{
-		GROUND,
-		AIR,
-		DEAD
-	};
-
 	const enum class GameObjectState {
 		ALIVE,
 		DEAD

@@ -46,29 +46,66 @@ namespace Engine {
 		void UpdateMenu();
 		void UpdateInGame();
 		void UpdatePause();
+		// Special Update
+		void UpdatePhysics();
 
 		void DestroyPreMenu();
 		void DestroyMenu();
 		void DestroyInGame();
 		void DestroyPause();
 
+		Sprite* CreatePlayer();
 		Sprite* CreateLaser();
 		Sprite* CreateEnemy();
+
+		void Shoot();
+
+		// Util
+		float simpleLerp(float v0, float v1, float t);
+
 	private:
-	// States
-		GameState state = GameState::PREMENU;
+// Control Variable
+	// Game States
+		GameState gameState = GameState::PREMENU;
 		bool stateSwitchFlag = false;
 
-	// Control Variable
+	// Score
+		float scoreTimer;
+		int score = 0;
+
+	// Character
+		// Flags
+		GameObjectState playerState;
+		Orientation playerOrient;
+		bool isMoving;
+		bool isFalling;
+
+		// Shooting
 		float maxShootSpeed = 240;
 		float shootCounter = 0;
 
-		// TODO: Put this in main?
+		// Kinematics
+		vec2 lastPlayerPos;
 		vec2 playerPos;
 		float playerRot;
-		Orientation playerOrient;
+
+		//Physics
+		float acceleration = 0;
+		float momentum = 0;
+
+	// Enemy
+		list<list<int>> spawnPointList;
 
 	// Graphics
+		// Background
+		Texture* backgroundTexture;
+		Sprite* background = NULL;
+
+		// Platform
+		//Texture* platformTexture;
+		//Texture* floorTexture;
+		Sprite* floor = NULL;
+		 
 		// UI
 		Texture* logoTexture;
 		Sprite* logo = NULL;
@@ -81,16 +118,9 @@ namespace Engine {
 		Text* preMenuText = NULL;
 		Text* playText = NULL;
 		Text* exitText = NULL;
+		Text* scoreText = NULL;
 	 
-		// Background
-		Texture* backgroundTexture;
-		Sprite* background = NULL;
-
-		// Platform
-		//Texture* floorTexture = new Texture("");
-		//Sprite* floor = new Sprite(floorTexture, defaultSpriteShader, defaultQuad);
-
-		// Bounding Box
+		// Bounding Box Debug
 		Texture* dot = NULL;
 
 		Sprite* dotSprite1 = NULL;
@@ -98,7 +128,13 @@ namespace Engine {
 		Sprite* dotSprite3 = NULL;
 		Sprite* dotSprite4 = NULL;
 
+		Sprite* dotSprite5 = NULL;
+		Sprite* dotSprite6 = NULL;
+		Sprite* dotSprite7 = NULL;
+		Sprite* dotSprite8 = NULL;
+
 		BoundingBox* playerBB = NULL;
+		BoundingBox* floorBB = NULL;
 
 		// Character
 		Texture* playerTexture;
