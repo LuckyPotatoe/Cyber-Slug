@@ -20,6 +20,8 @@ void Main::Init()
 	inputManager->AddInputMapping("up", SDLK_w);
 	inputManager->AddInputMapping("down", SDLK_s);
 	inputManager->AddInputMapping("space", SDLK_SPACE);
+	inputManager->AddInputMapping("enter", SDLK_KP_ENTER);
+	inputManager->AddInputMapping("escape", SDLK_ESCAPE);
 
 	inputManager->AddInputMapping("mute", SDLK_m);
 	inputManager->AddInputMapping("debug", SDLK_TAB);
@@ -30,6 +32,14 @@ void Main::Init()
 	mainMusic = new Music("music_main.wav");
 	mainMusic->SetVolume(10);
 	mainMusic->Play(true);
+
+// Pause
+	pauseOverlayTexture = new Texture("pause_overlay.png");
+	pauseOverlay = new Sprite(pauseOverlayTexture, defaultSpriteShader, defaultQuad);
+	
+	pauseText = new Text("Abaddon Bold.ttf", 30, defaultTextShader);
+	pauseText->SetText("PAUSED");
+	pauseText->SetPosition(setting->screenWidth / 2, setting->screenHeight / 2);
 
 	InitPreMenu();
 }
@@ -70,62 +80,107 @@ void Main::Update()
 void Main::Render()
 {
 	if (gameState == GameState::PREMENU) {
-		if (logo == NULL || preMenuText == NULL) {
-			return;
-		}
-		logo->Draw();
-		preMenuText->Draw();
+		if (backgroundLogo != NULL || preMenuText != NULL) {
+			backgroundLogo->Draw();
+			preMenuText->Draw();
+		}	
 	}
 	else if (gameState == GameState::MENU) {
-		if (playButton == NULL || exitButton == NULL || player == NULL) {
-			return;
+		if (backgroundLogo != NULL) {
+			backgroundLogo->Draw();
 		}
-		floor->Draw();
-		
-		playButton->Draw();
-		exitButton->Draw();	
 
-		player->Draw();
+		//Button
+		if (btnState == ButtonState::PLAY && btnPlayActive != NULL && btnExitNormal != NULL)
+		{
+			btnPlayActive->Draw();
+			btnExitNormal->Draw();
+		}
+		else if (btnState == ButtonState::EXIT && btnPlayNormal != NULL && btnExitActive != NULL)
+		{
+			btnPlayNormal->Draw();
+			btnExitActive->Draw();
+		}
 
-		dotSprite1->Draw();
-		dotSprite2->Draw();
-		dotSprite3->Draw();
-		dotSprite4->Draw();
-		
-		dotSprite5->Draw();
-		dotSprite6->Draw();
-		dotSprite7->Draw();
-		dotSprite8->Draw();
-
-		for (Laser* laser: laserList) {
-			if (laser != NULL) {
-				laser->Draw();
-			}
+		//Text
+		if (playMenuText != NULL && exitMenuText != NULL) {
+			playMenuText->Draw();
+			exitMenuText->Draw();
 		}
 	}
 	else if (gameState == GameState::GAME) {
-		if (background != NULL) {
-			background->Draw();
+		if (backgroundPlain != NULL) {
+			backgroundPlain->Draw();
 		}
 
 		if (scoreText != NULL) {
 			scoreText->Draw();
 		}
+
+		if (player != NULL) {
+			player->Draw();
+		}
+
+		if (dotSprite1 != NULL) {
+			dotSprite1->Draw();
+			dotSprite2->Draw();
+			dotSprite3->Draw();
+			dotSprite4->Draw();
+
+			dotSprite5->Draw();
+			dotSprite6->Draw();
+			dotSprite7->Draw();
+			dotSprite8->Draw();
+		}
+
+		for (Laser* laser : laserList) {
+			if (laser != NULL) {
+				laser->Draw();
+			}
+		}
 	}
 	else if (gameState == GameState::PAUSE) {
+		if (backgroundPlain != NULL) {
+			backgroundPlain->Draw();
+		}
 
+		if (scoreText != NULL) {
+			scoreText->Draw();
+		}
+
+		if (player != NULL) {
+			player->Draw();
+		}
+
+		if (dotSprite1 != NULL) {
+			dotSprite1->Draw();
+			dotSprite2->Draw();
+			dotSprite3->Draw();
+			dotSprite4->Draw();
+
+			dotSprite5->Draw();
+			dotSprite6->Draw();
+			dotSprite7->Draw();
+			dotSprite8->Draw();
+		}
+
+		for (Laser* laser : laserList) {
+			if (laser != NULL) {
+				laser->Draw();
+			}
+		}
+
+		if (pauseOverlay != NULL && pauseText != NULL) {
+			pauseOverlay->Draw();
+			pauseText->Draw();
+		}
 	}
 }
 
 void Engine::Main::InitPreMenu()
 {
-	SetBackgroundColor(120, 120, 120);
-
-	logoTexture = new Texture("logo.png");
-	logo = new Sprite(logoTexture, defaultSpriteShader, defaultQuad);
-
-	logo->SetPosition(100, 600);
-	logo->SetScale(0.8);
+	backgroundTextureLogo = new Texture("background_logo.png");
+	backgroundLogo = new Sprite(backgroundTextureLogo, defaultSpriteShader, defaultQuad);
 
 	preMenuText = new Text("Abaddon Bold.ttf", 30, defaultTextShader);
 	preMenuText->SetColor(255, 255, 255);
@@ -137,51 +192,40 @@ void Engine::Main::InitPreMenu()
 
 void Engine::Main::InitMenu()
 {
-	menuTexture = new Texture("menu.png");
+	//Button Play
+	btnNormalTexture = new Texture("button_normal.png");
+	btnPlayNormal = new Sprite(btnNormalTexture, defaultSpriteShader, defaultQuad);
+	btnPlayNormal->SetPosition(setting->screenWidth / 2 - 70, setting->screenHeight / 2 - 10);
 
-	playButton = new Sprite(menuTexture, defaultSpriteShader, defaultQuad);
-	playButton->SetNumXFrames(1);
-	playButton->SetNumYFrames(2);
-	playButton->AddAnimation("idle", 0, 0);
-	playButton->AddAnimation("hover", 1, 1);
-	playButton->PlayAnim("idle");
-	playButton->SetPosition(100, setting->screenHeight / 2);
-	playButton->SetScale(4);
+	btnExitNormal = new Sprite(btnNormalTexture, defaultSpriteShader, defaultQuad);
+	btnExitNormal->SetPosition(setting->screenWidth / 2 - 70, setting->screenHeight / 2 - 65);
 
-	exitButton = new Sprite(menuTexture, defaultSpriteShader, defaultQuad);
-	exitButton->SetNumXFrames(1);
-	exitButton->SetNumYFrames(2);
-	exitButton->AddAnimation("idle", 0, 0);
-	exitButton->AddAnimation("hover", 1, 1);
-	exitButton->PlayAnim("idle");
-	exitButton->SetPosition(100, (setting->screenHeight / 2) - (playButton->GetScaleHeight() + 20));
-	exitButton->SetScale(4);
-// Stage
-	dot = new Texture("dot.png");
+	//Button Active
+	btnActiveTexture = new Texture("button_active.png");
+	btnPlayActive = new Sprite(btnActiveTexture, defaultSpriteShader, defaultQuad);
+	btnPlayActive->SetPosition(setting->screenWidth / 2 - 70, setting->screenHeight / 2 - 10);
 
-	floor = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	floor->SetScale(1);
-	floor->SetBoundingBoxSize(setting->screenWidth * 2, 50);
+	btnExitActive = new Sprite(btnActiveTexture, defaultSpriteShader, defaultQuad);
+	btnExitActive->SetPosition(setting->screenWidth / 2 - 70, setting->screenHeight / 2 - 65);
 
-// Graphic
-	player = CreatePlayer();
+	//Button Text
+	playMenuText = new Text("Abaddon Bold.ttf", 30, defaultTextShader);
+	playMenuText->SetScale(1.0f);
+	playMenuText->SetColor(255, 255, 255);
+	playMenuText->SetText("PLAY");
+	playMenuText->SetPosition(setting->screenWidth / 2 - 37, setting->screenHeight / 2 + 3);
 
-	dotSprite1 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	dotSprite2 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	dotSprite3 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	dotSprite4 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	
-	dotSprite5 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	dotSprite6 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	dotSprite7 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	dotSprite8 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	exitMenuText = new Text("Abaddon Bold.ttf", 30, defaultTextShader);
+	exitMenuText->SetScale(1.0f);
+	exitMenuText->SetColor(255, 255, 255);
+	exitMenuText->SetText("EXIT");
+	exitMenuText->SetPosition(setting->screenWidth / 2 - 37, setting->screenHeight / 2 - 53);
 
-	// Laser
-	laserTexture = new Texture("bullet_trail.png");
-
-	// SFX
-	sfxShoot = new Sound("SingleShot2.wav");
-	sfxShoot->SetVolume(5);
+	//Button State
+	if (btnState == ButtonState::PLAY)
+	{
+		playMenuText->SetColor(0, 255, 0);
+	}
 }
 
 void Engine::Main::InitInGame()
@@ -196,14 +240,40 @@ void Engine::Main::InitInGame()
 	};
 
 	// Background
-	backgroundTexture = new Texture("cyber_sunrise.png");
-	background = new Sprite(backgroundTexture, defaultSpriteShader, defaultQuad);
-	background->SetPosition(0, 0);
+	backgroundTexturePlain = new Texture("background_plain.png");
+	backgroundPlain = new Sprite(backgroundTexturePlain, defaultSpriteShader, defaultQuad);
 
 	//Text
 	scoreText = new Text("Abaddon Bold.ttf", 30, defaultTextShader);
 	scoreText->SetText("Score: " + to_string(score));
 	scoreText->SetPosition(50, setting->screenHeight - 50);
+
+	// Stage
+	dot = new Texture("dot.png");
+
+	floor = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	floor->SetScale(1);
+	floor->SetBoundingBoxSize(setting->screenWidth * 2, 50);
+
+	// Graphic
+	player = CreatePlayer();
+
+	dotSprite1 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite2 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite3 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite4 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+
+	dotSprite5 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite6 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite7 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+	dotSprite8 = new Sprite(dot, defaultSpriteShader, defaultQuad);
+
+	// Laser
+	laserTexture = new Texture("bullet_trail.png");
+
+	// SFX
+	sfxShoot = new Sound("SingleShot2.wav");
+	sfxShoot->SetVolume(5);
 
 	// Enemy
 	// TODO: Change texture to actual enemy texture
@@ -212,13 +282,14 @@ void Engine::Main::InitInGame()
 
 void Engine::Main::InitPause()
 {
+	// MOVED TO Init(), ga gede2 amat, to avoid redundant calls.
+	// We modify draw call and state changing to handle pause.
 }
 
 void Engine::Main::UpdatePreMenu()
 {
 	if (inputManager->IsKeyReleased("space")) {
-		// TODO: Change this back to GameState::MENU
-		gameState = GameState::GAME;
+		gameState = GameState::MENU;
 		stateSwitchFlag = true;
 		DestroyPreMenu();
 	}
@@ -226,9 +297,47 @@ void Engine::Main::UpdatePreMenu()
 
 void Engine::Main::UpdateMenu()
 {
-	// Anim Updates
-	playButton->Update(GetGameTime());
-	exitButton->Update(GetGameTime());
+	if (inputManager->IsKeyReleased("up"))
+	{
+		btnState = ButtonState::PLAY;
+		playMenuText->SetColor(0, 255, 0);
+		exitMenuText->SetColor(255, 255, 255);
+
+	}
+	else if (inputManager->IsKeyReleased("down"))
+	{
+		btnState = ButtonState::EXIT;
+		exitMenuText->SetColor(255, 0, 0);
+		playMenuText->SetColor(255, 255, 255);
+	}
+
+	//PLAY
+	if (btnState == ButtonState::PLAY && (inputManager->IsKeyReleased("space") || inputManager->IsKeyReleased("enter")))
+	{
+		gameState = GameState::GAME;
+		stateSwitchFlag = true;
+		DestroyMenu();
+	}
+
+	//EXIT
+	if (btnState == ButtonState::EXIT && (inputManager->IsKeyReleased("space") || inputManager->IsKeyReleased("enter")))
+	{
+		exit(0);
+	}
+}
+
+void Engine::Main::UpdateInGame()
+{
+	scoreText->SetText("Score: " + to_string(score));
+
+	// Score update per 3 frame-ish
+	if (scoreTimer > 360) {
+		score += 1;
+		scoreTimer = 0;
+	}
+	else {
+		scoreTimer += GetGameTime();
+	}
 
 	player->Update(GetGameTime());
 
@@ -337,6 +446,10 @@ void Engine::Main::UpdateMenu()
 		}
 	}
 
+	if (inputManager->IsKeyReleased("escape")) {
+		gameState = GameState::PAUSE;
+	}
+
 	if (inputManager->IsKeyReleased("debug")) {
 		cout << setting->screenWidth << ", " << setting->screenHeight;
 	}
@@ -351,9 +464,9 @@ void Engine::Main::UpdateMenu()
 		playerBB->GetVertices()[2].y - (0.5f * dotSprite3->GetScaleHeight()));
 	dotSprite4->SetPosition(playerBB->GetVertices()[3].x - (0.5f * dotSprite4->GetScaleWidth()),
 		playerBB->GetVertices()[3].y - (0.5f * dotSprite3->GetScaleHeight()));
-	
+
 	floorBB = floor->GetBoundingBox();
-	
+
 	dotSprite5->SetPosition(floorBB->GetVertices()[0].x - (0.5f * dotSprite5->GetScaleWidth()),
 		floorBB->GetVertices()[0].y - (0.5f * dotSprite5->GetScaleHeight()));
 	dotSprite6->SetPosition(floorBB->GetVertices()[1].x - (0.5f * dotSprite6->GetScaleWidth()),
@@ -362,20 +475,6 @@ void Engine::Main::UpdateMenu()
 		floorBB->GetVertices()[2].y - (0.5f * dotSprite7->GetScaleHeight()));
 	dotSprite8->SetPosition(floorBB->GetVertices()[3].x - (0.5f * dotSprite8->GetScaleWidth()),
 		floorBB->GetVertices()[3].y - (0.5f * dotSprite8->GetScaleHeight()));
-}
-
-void Engine::Main::UpdateInGame()
-{
-	scoreText->SetText("Score: " + to_string(score));
-
-	// Score update per 3 frame-ish
-	if (scoreTimer > 360) {
-		score += 1;
-		scoreTimer = 0;
-	}
-	else {
-		scoreTimer += GetGameTime();
-	}
 
 	// TODO: Enemy Spawn
 	//enemyList.push_back(CreateEnemy());
@@ -383,6 +482,9 @@ void Engine::Main::UpdateInGame()
 
 void Engine::Main::UpdatePause()
 {
+	if (inputManager->IsKeyReleased("escape")) {
+		gameState = GameState::GAME;
+	}
 }
 
 void Engine::Main::UpdatePhysics()
@@ -434,13 +536,21 @@ void Engine::Main::UpdatePhysics()
 
 void Main::DestroyPreMenu()
 {
-	delete logo;
-	delete logoTexture;
 	delete preMenuText;
 }
 
 void Main::DestroyMenu()
 {
+	delete backgroundTextureLogo;
+	delete backgroundLogo;
+	delete btnNormalTexture;
+	delete btnActiveTexture;
+	delete btnPlayNormal;
+	delete btnExitNormal;
+	delete btnPlayActive;
+	delete btnExitActive;
+	delete playMenuText;
+	delete exitMenuText;
 }
 
 void Main::DestroyInGame()
@@ -449,6 +559,11 @@ void Main::DestroyInGame()
 
 void Main::DestroyPause()
 {
+	// EMPTY TO SAVE I/O CALLS
+
+	/*delete pauseOverlayTexture;
+	delete pauseOverlay;
+	delete pauseText;*/
 }
 
 Sprite* Main::CreatePlayer()
@@ -477,16 +592,17 @@ Sprite* Main::CreateLaser() {
 	laser->SetNumYFrames(1);
 	laser->SetAnimationDuration(15);
 	laser->AddAnimation("pulse", 0, 3);
-	laser->SetScale(1.8);
+	laser->SetScale(1.2);
 	laser->PlayAnim("pulse");
 	laser->SetBoundingBoxSize(laser->GetScaleWidth(), laser->GetScaleHeight());
 	
 	// Position correction for the gun barrel
+	// TODO: Hardcode offset?
 	if (playerOrient == Orientation::RIGHT) {
-		laser->SetPosition(playerPos.x + 100, playerPos.y + 32);
+		laser->SetPosition(playerPos.x + 70, playerPos.y + 21);
 	}
 	else if (playerOrient == Orientation::LEFT) {
-		laser->SetPosition(playerPos.x - 100, playerPos.y + 32);
+		laser->SetPosition(playerPos.x - 70, playerPos.y + 21);
 		laser->SetFlipHorizontal(1);
 	}
 

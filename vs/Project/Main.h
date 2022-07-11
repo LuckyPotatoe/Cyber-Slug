@@ -27,6 +27,11 @@ namespace Engine {
 		PAUSE
 	};
 
+	const enum ButtonState {
+		PLAY,
+		EXIT
+	};
+
 	class Main :
 		public Engine::Game
 	{
@@ -69,6 +74,8 @@ namespace Engine {
 		GameState gameState = GameState::PREMENU;
 		bool stateSwitchFlag = false;
 
+		ButtonState btnState = ButtonState::PLAY;
+
 	// Score
 		float scoreTimer;
 		int score = 0;
@@ -98,27 +105,33 @@ namespace Engine {
 
 	// Graphics
 		// Background
-		Texture* backgroundTexture;
-		Sprite* background = NULL;
+		Texture* backgroundTextureLogo;
+		Texture* backgroundTexturePlain;
+		Sprite* backgroundLogo = NULL;
+		Sprite* backgroundPlain = NULL;
+
+		Texture* pauseOverlayTexture;
+		Sprite* pauseOverlay = NULL;
 
 		// Platform
-		//Texture* platformTexture;
-		//Texture* floorTexture;
+		Texture* platformTexture;
+		Texture* floorTexture;
 		Sprite* floor = NULL;
 		 
 		// UI
-		Texture* logoTexture;
-		Sprite* logo = NULL;
-
-		Texture* menuTexture;
-		Sprite* playButton = NULL;
-		Sprite* exitButton = NULL;
+		Texture* btnNormalTexture;
+		Texture* btnActiveTexture;
+		Sprite* btnPlayNormal = NULL;
+		Sprite* btnPlayActive = NULL;
+		Sprite* btnExitNormal = NULL;
+		Sprite* btnExitActive = NULL;
 
 		// Text
 		Text* preMenuText = NULL;
-		Text* playText = NULL;
-		Text* exitText = NULL;
+		Text* playMenuText = NULL;
+		Text* exitMenuText = NULL;
 		Text* scoreText = NULL;
+		Text* pauseText = NULL;
 	 
 		// Bounding Box Debug
 		Texture* dot = NULL;

@@ -15,6 +15,6 @@ namespace Engine {
 
 	const float animationFrameFac = 1.8f;
 
-	const float characterScaleFac = 3.0f;
+	const float characterScaleFac = 2;
 	const float characterSpeedFac = 3.3f;
 }
