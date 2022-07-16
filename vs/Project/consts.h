@@ -10,11 +10,10 @@ namespace Engine {
 		RIGHT,
 		LEFT
 	};
-
-	const float gravity = 9.81f;
+	const float maxYVel = -3.0f;
 
 	const float animationFrameFac = 1.8f;
 
 	const float characterScaleFac = 2;
-	const float characterSpeedFac = 3.3f;
+	const float characterSpeedFac = 5.0f;
 }

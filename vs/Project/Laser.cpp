@@ -2,11 +2,29 @@
 
 using namespace Engine;
 
-Laser::Laser(Sprite* sprite, Orientation orient)
+Laser::Laser(Texture* texture, Shader* defaultShader, Quad* defaultQuad,
+	vec2 spawnPoint, Orientation orient, float velocity)
 {
 	state = GameObjectState::ALIVE;
-	this->laser = sprite;
+	this->laser = new Sprite(texture, defaultShader, defaultQuad);
+	laser->SetNumXFrames(4);
+	laser->SetNumYFrames(1);
+	laser->SetAnimationDuration(60);
+	laser->AddAnimation("pulse", 0, 3);
+	laser->SetScale(1);
+	laser->PlayAnim("pulse");
+	laser->SetBoundingBoxSize(laser->GetScaleWidth(), laser->GetScaleHeight());
+
+	if (orient == Orientation::RIGHT) {
+		laser->SetPosition(spawnPoint.x + 70, spawnPoint.y + 21);
+	}
+	else if (orient == Orientation::LEFT) {
+		laser->SetPosition(spawnPoint.x - 70, spawnPoint.y + 21);
+		laser->SetFlipHorizontal(1);
+	}
+
 	this->orient = orient;
+	this->velocity = velocity;
 }
 
 Laser::~Laser()
@@ -20,8 +38,7 @@ void Laser::Update(float deltaTime)
 		return;
 	}
 
-	vec2 pos = GetPosition();
-	float velocity = 50;
+	vec2 pos = laser->GetPosition();
 
 	if (orient == Orientation::RIGHT) {
 		laser->SetPosition(pos.x + velocity, pos.y);
@@ -44,26 +61,20 @@ void Laser::Draw()
 	}
 }
 
-void Laser::SetSpawn(float x, float y) {
-	laser->SetPosition(x, y);
-}
-
-void Engine::Laser::SetState(GameObjectState state)
+void Laser::SetState(GameObjectState state)
 {
 	this->state = state;
 }
 
-float Laser::GetWidth()
-{
-	return laser->GetScaleWidth();
+Sprite* Laser::GetSpriteComponent() {
+	return laser;
 }
 
-float Laser::GetHeight()
-{
-	return laser->GetScaleHeight();
+Laser* Laser::GetLaserComponent() {
+	return this;
 }
 
-GameObjectState Laser::GetState()
+GameObjectState Laser::GetLifecycleState()
 {
 	return state;
 }
@@ -71,14 +82,4 @@ GameObjectState Laser::GetState()
 bool Laser::IsDead()
 {
 	return Engine::GameObjectState::DEAD == state;;
-}
-
-vec2 Laser::GetPosition()
-{
-	return laser->GetPosition();
-}
-
-float Laser::GetRot()
-{
-	return laser->GetRotation();
 }

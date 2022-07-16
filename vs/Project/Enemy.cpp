@@ -2,10 +2,33 @@
 
 using namespace Engine;
 
-Enemy::Enemy(Sprite* sprite)
+Enemy::Enemy(Texture* texture, Shader* defaultShader, Quad* defaultQuad,
+	vec2 spawnPoint, Orientation orient)
 {
-	this->enemy = sprite;
-	state = GameObjectState::ALIVE;
+	lifecycleState = GameObjectState::ALIVE;
+	this->orient = orient;
+
+	this->enemy = new Sprite(texture, defaultShader, defaultQuad);
+	enemy->SetNumXFrames(6);
+	enemy->SetNumYFrames(6);
+	enemy->SetAnimationDuration(60 * animationFrameFac);
+	enemy->AddAnimation("idle", 0, 3);
+	enemy->AddAnimation("idle_aim", 6, 9);
+	enemy->AddAnimation("run", 12, 17);
+	enemy->AddAnimation("run_aim", 18, 23);
+	enemy->AddAnimation("jump", 24, 27);
+	enemy->AddAnimation("jump_aim", 30, 33);
+	enemy->SetScale(characterScaleFac);
+	enemy->SetBoundingBoxSize(enemy->GetScaleWidth() / 1.7, enemy->GetScaleHeight());
+
+	enemy->SetPosition(spawnPoint.x, spawnPoint.y);
+
+	if (orient == Orientation::RIGHT) {
+		// pass
+	}
+	else if (orient == Orientation::LEFT) {
+		enemy->SetFlipHorizontal(1);
+	}
 }
 
 Enemy::~Enemy()
@@ -15,21 +38,45 @@ Enemy::~Enemy()
 
 void Enemy::Update(float deltaTime)
 {
-	if (state == GameObjectState::DEAD) {
+	if (lifecycleState == GameObjectState::DEAD) {
 		return;
 	}
 
-	vec2 pos = GetPosition();
-	float velocity = 50;
+	if (isPhysicsInit) {
+		lastPos = pos;
+	}
+
+	pos = enemy->GetPosition();
+	xMov = pos.x, yMov = pos.y;
+
+	if (isPhysicsInit == false) {
+		InitPhysics();
+	}
 
 	//TODO: Enemy behaviour
+	if (behaviourCounter > 600) {
+		behaviourFactor = rand() % 2;
+
+		if (behaviourFactor == 0) {
+			Idle();
+		}
+		else if (behaviourFactor == 1) {
+			Patrol();
+		}
+		behaviourCounter = 0;
+	}
+	else {
+		behaviourCounter += deltaTime;
+	}
+
+	UpdatePhysics(deltaTime);
 
 	enemy->Update(deltaTime);
 }
 
 void Enemy::Draw()
 {
-	if (state == GameObjectState::ALIVE) {
+	if (lifecycleState == GameObjectState::ALIVE) {
 		enemy->Draw();
 	}
 	else {
@@ -37,46 +84,128 @@ void Enemy::Draw()
 	}
 }
 
-void Enemy::Shoot() {
+void Enemy::InitPhysics() {
+	lastPos = vec2(pos.x, pos.y + 1);
+	gravity = 0.16f;
 
+	isFalling = true;
+
+	isPhysicsInit = true;
 }
 
-void Enemy::SetSpawn(float x, float y) 
-{
-	enemy->SetPosition(x, y);
+void Enemy::UpdatePhysics(float deltaTime) {
+	// State update
+	if (isFalling) {
+		if (yVelocity > maxYVel) {
+			yVelocity -= gravity;
+		}
+		else {
+			yVelocity = maxYVel;
+		}
+	}
+	else if (isFalling == false) {
+		yVelocity = 0;
+		yMov = pos.y;
+	}
+
+	yMov += yVelocity * deltaTime;
+	enemy->SetPosition(xMov, yMov);
+
+	if (lastPos.y > pos.y) {
+		isFalling = true;
+	}
 }
 
-void Enemy::SetState(GameObjectState state)
+void Enemy::Idle()
 {
-	this->state = state;
+	cout << "idle";
+	enemy->PlayAnim("idle");
 }
 
-float Enemy::GetWidth()
+void Enemy::Patrol()
 {
-	return enemy->GetScaleWidth();
+	cout << "patrol";
+	patrolMood = rand() % 2;
+
+	if (patrolMood == 0) {
+		orient = Orientation::RIGHT;
+		xMov += 20;
+		enemy->PlayAnim("run");
+		enemy->SetFlipHorizontal(0);
+		enemy->SetPosition(xMov, yMov);
+	}
+	else if (patrolMood == 1) {
+		orient = Orientation::LEFT;
+		xMov -= 20;
+		enemy->PlayAnim("run");
+		enemy->SetFlipHorizontal(1);
+		enemy->SetPosition(xMov, yMov);
+	}
 }
 
-float Enemy::GetHeight()
+GameObjectState Enemy::GetLifecycleState()
 {
-	return enemy->GetScaleHeight();
+	return lifecycleState;
 }
 
-GameObjectState Enemy::GetState()
+void Enemy::SetLifecycleState(GameObjectState state)
 {
-	return state;
+	this->lifecycleState = state;
 }
 
-bool Enemy::IsDead()
+EnemyState Enemy::GetBehaviourState()
 {
-	return state == GameObjectState::DEAD;
+	return behaviourState;
 }
 
-vec2 Enemy::GetPosition()
+void Enemy::SetBehaviourState(EnemyState state)
 {
-	return enemy->GetPosition();
+	this->behaviourState = state;
 }
 
-float Enemy::GetRot()
+float Engine::Enemy::GetShootCounter()
 {
-	return enemy->GetRotation();
+	return shootCounter;
+}
+
+void Enemy::SetShootCounter(float amount) {
+	this->shootCounter = amount;
+}
+
+float Enemy::GetShootMood() {
+	return shootMood;
+}
+
+void Enemy::SetShootMood(float amount) {
+	this->shootMood = amount;
+}
+
+float Enemy::GetYVelocity() {
+	return yVelocity;
+}
+
+void Enemy::SetYVelocity(float amount) {
+	yVelocity = amount;
+}
+
+Sprite* Enemy::GetSpriteComponent() {
+	return enemy;
+}
+
+Orientation Engine::Enemy::GetOrient()
+{
+	return orient;
+}
+
+bool Enemy::GetIsDead()
+{
+	return lifecycleState == GameObjectState::DEAD;
+}
+
+bool Enemy::GetIsFalling() {
+	return isFalling;
+}
+
+void Enemy::SetIsFalling(bool factor) {
+	isFalling = factor;
 }

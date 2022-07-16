@@ -14,6 +14,8 @@
 #include "Enemy.h"
 #include "Laser.h"
 
+extern float maxYVel;
+
 extern float animationFrameFac;
 
 extern float characterSpeedFac;
@@ -24,7 +26,8 @@ namespace Engine {
 		PREMENU,
 		MENU,
 		GAME,
-		PAUSE
+		PAUSE,
+		GAMEOVER
 	};
 
 	const enum ButtonState {
@@ -45,25 +48,29 @@ namespace Engine {
 		void InitPreMenu();
 		void InitMenu();
 		void InitInGame();
-		void InitPause();
-		
+		// InitPause() functions moced to Init(), it's not a lot, might as well.
+		// InitGameover() functions moced to Init(), it's not a lot, might as well.
+		// Special Init
+		void InitPhysics();
+
 		void UpdatePreMenu();
 		void UpdateMenu();
 		void UpdateInGame();
 		void UpdatePause();
+		void UpdateGameover();
 		// Special Update
 		void UpdatePhysics();
 
 		void DestroyPreMenu();
 		void DestroyMenu();
 		void DestroyInGame();
-		void DestroyPause();
+		// DestroyPause() does not exist to save I/O calls
+		// DestroyGameover() does not exist to save I/O calls
 
 		Sprite* CreatePlayer();
-		Sprite* CreateLaser();
-		Sprite* CreateEnemy();
 
-		void Shoot();
+		void PlayerShoot();
+		void PlayerJump();
 
 		// Util
 		float simpleLerp(float v0, float v1, float t);
@@ -73,6 +80,7 @@ namespace Engine {
 	// Game States
 		GameState gameState = GameState::PREMENU;
 		bool stateSwitchFlag = false;
+		bool isPhysicsInit = false;
 
 		ButtonState btnState = ButtonState::PLAY;
 
@@ -84,24 +92,29 @@ namespace Engine {
 		// Flags
 		GameObjectState playerState;
 		Orientation playerOrient;
-		bool isMoving;
 		bool isFalling;
 
 		// Shooting
-		float maxShootSpeed = 240;
-		float shootCounter = 0;
+		float playerMaxShootSpeed = 60 * 7;
+		float playerShootCounter = 0;
+		float enemyMaxShootSpeed = 60 * 14;
 
 		// Kinematics
-		vec2 lastPlayerPos;
-		vec2 playerPos;
-		float playerRot;
+		float gravity;
 
-		//Physics
-		float acceleration = 0;
-		float momentum = 0;
+		vec2 lastPlayerPos;
+		float xMov, yMov;
+		vec2 playerPos;
+
+		float yVelocity;
 
 	// Enemy
-		list<list<int>> spawnPointList;
+		vector<vec2> spawnerVector;
+
+		// Spawner
+		int TTS; // Time to spawn
+		int enemyPool; // Maximum number of enemy allowed, will be incrementally added as the score gets higher.
+		int spawnedEnemy; // Number of enemy spawned.
 
 	// Graphics
 		// Background
@@ -114,9 +127,13 @@ namespace Engine {
 		Sprite* pauseOverlay = NULL;
 
 		// Platform
+		list<Sprite*> platformList;
 		Texture* platformTexture;
 		Texture* floorTexture;
 		Sprite* floor = NULL;
+		Sprite* platform1 = NULL;
+		Sprite* platform2 = NULL;
+		Sprite* platform3 = NULL;
 		 
 		// UI
 		Texture* btnNormalTexture;
@@ -132,22 +149,42 @@ namespace Engine {
 		Text* exitMenuText = NULL;
 		Text* scoreText = NULL;
 		Text* pauseText = NULL;
+		Text* gameoverText = NULL;
+		Text* gameoverText2 = NULL;
 	 
 		// Bounding Box Debug
 		Texture* dot = NULL;
 
-		Sprite* dotSprite1 = NULL;
-		Sprite* dotSprite2 = NULL;
-		Sprite* dotSprite3 = NULL;
-		Sprite* dotSprite4 = NULL;
+		Sprite* playerBBMarker1 = NULL;
+		Sprite* playerBBMarker2 = NULL;
+		Sprite* playerBBMarker3 = NULL;
+		Sprite* playerBBMarker4 = NULL;
 
-		Sprite* dotSprite5 = NULL;
-		Sprite* dotSprite6 = NULL;
-		Sprite* dotSprite7 = NULL;
-		Sprite* dotSprite8 = NULL;
+		Sprite* floorBBMarker1 = NULL;
+		Sprite* floorBBMarker2 = NULL;
+		Sprite* floorBBMarker3 = NULL;
+		Sprite* floorBBMarker4 = NULL;
+		
+		Sprite* plt1BBMarker1 = NULL;
+		Sprite* plt1BBMarker2 = NULL;
+		Sprite* plt1BBMarker3 = NULL;
+		Sprite* plt1BBMarker4 = NULL;
+		
+		Sprite* plt2BBMarker1 = NULL;
+		Sprite* plt2BBMarker2 = NULL;
+		Sprite* plt2BBMarker3 = NULL;
+		Sprite* plt2BBMarker4 = NULL;
+		
+		Sprite* plt3BBMarker1 = NULL;
+		Sprite* plt3BBMarker2 = NULL;
+		Sprite* plt3BBMarker3 = NULL;
+		Sprite* plt3BBMarker4 = NULL;
 
 		BoundingBox* playerBB = NULL;
 		BoundingBox* floorBB = NULL;
+		BoundingBox* platform1BB = NULL;
+		BoundingBox* platform2BB = NULL;
+		BoundingBox* platform3BB = NULL;
 
 		// Character
 		Texture* playerTexture;
@@ -155,18 +192,27 @@ namespace Engine {
 
 		//Enemy
 		Texture* enemyTexture;
-		list<Sprite*> enemyList;
+		list<Enemy*> enemyList;
 
 		//Laser
-		Texture* laserTexture;
-		list<Laser*> laserList;
+		Texture* playerLaserTexture;
+		Texture* enemyLaserTexture;
+		list<Laser*> playerLaserList;
+		list<Laser*> enemyLaserList;
 
 	// Sound
-		// Music
+		// BGM
 		Music* mainMusic;
 		bool isMusicRunning = true;
 		
+		// SFX Flags
+		bool playLandSFX;
+
 		// SFX
-		Sound* sfxShoot;
+		Sound* sfxPlayerShoot;
+		Sound* sfxEnemyShoot;
+		Sound* sfxJump;
+		Sound* sfxLand;
+		Sound* sfxHit;
 	};
 }
