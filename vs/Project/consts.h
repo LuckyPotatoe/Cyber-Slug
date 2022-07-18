@@ -10,6 +10,7 @@ namespace Engine {
 		RIGHT,
 		LEFT
 	};
+
 	const float maxYVel = -3.0f;
 
 	const float animationFrameFac = 1.8f;

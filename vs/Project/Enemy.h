@@ -1,16 +1,22 @@
 #pragma once
 
-#include "Consts.h"
 #include "Sprite.h"
+#include "Sound.h"
+
+#include "Consts.h"
 
 extern float maxYVel;
 extern float animationFrameFac;
 extern float spriteScaleFac;
 extern float characterSpeedFac;
 
+using namespace std;
+
+#include <list>
+
 namespace Engine {
 	const enum EnemyState {
-		IDLE,
+		WAITING,
 		PATROL,
 		CHASE
 	};
@@ -20,14 +26,14 @@ namespace Engine {
 	public:
 		Enemy(Texture* texture, Shader* defaultShader, Quad* defaultQuad, vec2 spawnPoint, Orientation orient);
 		~Enemy();
-		void Update(float deltaTime);
+		void Update(float deltaTime, list<Sprite*> &platformList, Sound* sfxLand);
 		void Draw();
 
 		void InitPhysics();
-		void UpdatePhysics(float deltaTime);
+		void UpdatePhysics(float deltaTime, list<Sprite*> platformList, Sound* sfxLand);
 
 		// Behaviour functions
-		void Idle();
+		void Waiting();
 		void Patrol();
 
 		// Util functions
@@ -36,6 +42,7 @@ namespace Engine {
 
 		EnemyState GetBehaviourState();
 		void SetBehaviourState(EnemyState state);
+
 		
 		float GetShootCounter();
 		void SetShootCounter(float amount);
@@ -52,8 +59,8 @@ namespace Engine {
 		Sprite* GetSpriteComponent();
 		Orientation GetOrient();
 		bool GetIsDead();
-
-
+		vec2 GetPos();
+		vec2 GetLastPos();
 	private:
 		bool isPhysicsInit = false;
 
@@ -77,5 +84,7 @@ namespace Engine {
 
 		float shootMood;
 		float shootCounter = 0;
+
+		bool playLandSFX;
 	};
 }

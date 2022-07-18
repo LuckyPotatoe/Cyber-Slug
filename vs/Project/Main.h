@@ -30,6 +30,15 @@ namespace Engine {
 		GAMEOVER
 	};
 
+	const enum AnimationState {
+		IDLE,
+		IDLE_AIM,
+		RUN,
+		RUN_AIM,
+		JUMP,
+		JUMP_AIM
+	};
+
 	const enum ButtonState {
 		PLAY,
 		EXIT
@@ -48,8 +57,8 @@ namespace Engine {
 		void InitPreMenu();
 		void InitMenu();
 		void InitInGame();
-		// InitPause() functions moced to Init(), it's not a lot, might as well.
-		// InitGameover() functions moced to Init(), it's not a lot, might as well.
+		// InitPause() functions moved to Init(), it's not a lot, might as well.
+		// InitGameover() functions moved to Init(), it's not a lot, might as well.
 		// Special Init
 		void InitPhysics();
 
@@ -92,8 +101,18 @@ namespace Engine {
 		// Flags
 		GameObjectState playerState;
 		Orientation playerOrient;
+		AnimationState animState = AnimationState::IDLE;
 		bool isFalling;
 
+		// Animation
+		float idleAimWait = 0;
+		float runWait = 0;
+		float runAimWait = 0;
+		bool isKeyPressedOnce = false;
+
+		float runAimWaitMax = 60 * 9;
+		bool isRunAim = false;
+		
 		// Shooting
 		float playerMaxShootSpeed = 60 * 7;
 		float playerShootCounter = 0;
@@ -108,13 +127,17 @@ namespace Engine {
 
 		float yVelocity;
 
+
 	// Enemy
 		vector<vec2> spawnerVector;
 
 		// Spawner
 		int TTS; // Time to spawn
+
 		int enemyPool; // Maximum number of enemy allowed, will be incrementally added as the score gets higher.
 		int spawnedEnemy; // Number of enemy spawned.
+		int enemyAlive;
+		int enemyDead;
 
 	// Graphics
 		// Background

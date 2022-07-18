@@ -131,17 +131,20 @@ void Main::Render()
 			floorBBMarker2->Draw();
 			floorBBMarker3->Draw();
 			floorBBMarker4->Draw();
-
+			
+			platform1->Draw();
 			plt1BBMarker1->Draw();
 			plt1BBMarker2->Draw();
 			plt1BBMarker3->Draw();
 			plt1BBMarker4->Draw();
-
+			
+			platform2->Draw();
 			plt2BBMarker1->Draw();
 			plt2BBMarker2->Draw();
 			plt2BBMarker3->Draw();
 			plt2BBMarker4->Draw();
 
+			platform3->Draw();
 			plt3BBMarker1->Draw();
 			plt3BBMarker2->Draw();
 			plt3BBMarker3->Draw();
@@ -190,16 +193,19 @@ void Main::Render()
 			floorBBMarker3->Draw();
 			floorBBMarker4->Draw();
 			
+			platform1->Draw();
 			plt1BBMarker1->Draw();
 			plt1BBMarker2->Draw();
 			plt1BBMarker3->Draw();
 			plt1BBMarker4->Draw();
 			
+			platform2->Draw();
 			plt2BBMarker1->Draw();
 			plt2BBMarker2->Draw();
 			plt2BBMarker3->Draw();
 			plt2BBMarker4->Draw();
 			
+			platform3->Draw();
 			plt3BBMarker1->Draw();
 			plt3BBMarker2->Draw();
 			plt3BBMarker3->Draw();
@@ -253,16 +259,19 @@ void Main::Render()
 			floorBBMarker3->Draw();
 			floorBBMarker4->Draw();
 
+			platform1->Draw();
 			plt1BBMarker1->Draw();
 			plt1BBMarker2->Draw();
 			plt1BBMarker3->Draw();
 			plt1BBMarker4->Draw();
 
+			platform2->Draw();
 			plt2BBMarker1->Draw();
 			plt2BBMarker2->Draw();
 			plt2BBMarker3->Draw();
 			plt2BBMarker4->Draw();
 
+			platform3->Draw();
 			plt3BBMarker1->Draw();
 			plt3BBMarker2->Draw();
 			plt3BBMarker3->Draw();
@@ -356,7 +365,7 @@ void Main::InitInGame()
 	// UNDONE: Reset the down leftmost and rightmost to floor ouside the screen.
 	// This is temporary since enemy can't walk yet. Mind the Y!
 	spawnerVector = {
-		// High center falldown
+		// High center
 		{vec2((setting->screenWidth / 2) - 34, setting->screenHeight + 25)},
 		// High quarter left
 		{vec2((setting->screenWidth / 4), setting->screenHeight + 25)},
@@ -369,7 +378,6 @@ void Main::InitInGame()
 	};
 
 	// Background
-	// UNDONE Bring back texture
 	backgroundTexturePlain = new Texture("background_plain.png");
 	backgroundPlain = new Sprite(backgroundTexturePlain, defaultSpriteShader, defaultQuad);
 
@@ -380,22 +388,23 @@ void Main::InitInGame()
 
 	// Stage
 	dot = new Texture("dot.png");
+	platformTexture = new Texture("platform.png");
 
 	// TODO: Floor & Platform texture 
 	floor = new Sprite(dot, defaultSpriteShader, defaultQuad);
 	floor->SetBoundingBoxSize(setting->screenWidth * 2, 50);
 
-	platform1 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	platform1->SetPosition(setting->screenWidth / 3 - 134, setting->screenHeight / 4);
-	platform1->SetBoundingBoxSize(200, 50);
+	platform1 = new Sprite(platformTexture, defaultSpriteShader, defaultQuad);
+	platform1->SetPosition(setting->screenWidth / 3 - 160, setting->screenHeight / 4);
+	platform1->SetBoundingBoxSize(platform1->GetScaleWidth(), platform1->GetScaleHeight());
 
-	platform2 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	platform2->SetPosition(setting->screenWidth / 2, setting->screenHeight / 2);
-	platform2->SetBoundingBoxSize(200, 50);
+	platform2 = new Sprite(platformTexture, defaultSpriteShader, defaultQuad);
+	platform2->SetPosition(setting->screenWidth / 2 - 90, setting->screenHeight / 2);
+	platform2->SetBoundingBoxSize(platform2->GetScaleWidth(), platform2->GetScaleHeight());
 
-	platform3 = new Sprite(dot, defaultSpriteShader, defaultQuad);
-	platform3->SetPosition(setting->screenWidth - 200, setting->screenHeight / 4);
-	platform3->SetBoundingBoxSize(200, 50);
+	platform3 = new Sprite(platformTexture, defaultSpriteShader, defaultQuad);
+	platform3->SetPosition(setting->screenWidth - 350, setting->screenHeight / 4);
+	platform3->SetBoundingBoxSize(platform3->GetScaleWidth(), platform3->GetScaleHeight());
 	
 	platformList.push_back(floor);
 	platformList.push_back(platform1);
@@ -450,7 +459,7 @@ void Main::InitInGame()
 	// Enemy
 	enemyPool = 2;
 	// TODO: Change texture to actual enemy texture
-	enemyTexture = new Texture("character.png");
+	enemyTexture = new Texture("character_enemy.png");
 }
 
 void Main::InitPhysics() {
@@ -463,7 +472,7 @@ void Main::InitPhysics() {
 	isPhysicsInit = true;
 }
 
-void Engine::Main::UpdatePreMenu()
+void Main::UpdatePreMenu()
 {
 	if (inputManager->IsKeyReleased("space")) {
 		gameState = GameState::MENU;
@@ -472,7 +481,7 @@ void Engine::Main::UpdatePreMenu()
 	}
 }
 
-void Engine::Main::UpdateMenu()
+void Main::UpdateMenu()
 {
 	if (inputManager->IsKeyReleased("up"))
 	{
@@ -503,7 +512,7 @@ void Engine::Main::UpdateMenu()
 	}
 }
 
-void Engine::Main::UpdateInGame()
+void Main::UpdateInGame()
 {
 	scoreText->SetText("Score: " + to_string(score));
 
@@ -525,6 +534,7 @@ void Engine::Main::UpdateInGame()
 	if (enemyPool > 0) {
 		if (TTS > 60 * 30) {
 			int spawnerFac = rand() % 5;
+			cout << "Pool: " << enemyPool << endl;
 
 			// High center
 			if (spawnerFac == 0) {
@@ -555,6 +565,7 @@ void Engine::Main::UpdateInGame()
 			enemyPool -= 1;
 			spawnedEnemy += 1;
 			TTS = 0;
+			cout << "Spawned: " << spawnedEnemy << endl;
 		}
 		else {
 			TTS += GetGameTime();
@@ -613,7 +624,7 @@ void Engine::Main::UpdateInGame()
 	for (enemyIt = enemyList.begin(); enemyIt != enemyList.end(); ++enemyIt) {
 		Enemy* enemy = *enemyIt;
 		if (enemy->GetLifecycleState() == GameObjectState::ALIVE) {
-			enemy->Update(GetGameTime());
+			enemy->Update(GetGameTime(), platformList, sfxLand);
 
 			enemy->SetShootMood(rand() % 2);
 
@@ -656,6 +667,7 @@ void Engine::Main::UpdateInGame()
 
 			if (laserSprite->GetBoundingBox()->CollideWith(player->GetBoundingBox()) == true) {
 				sfxHit->Play(false);
+				score = 0;
 				// Comment for godmode
 				playerState = GameObjectState::DEAD;
 				gameState = GameState::GAMEOVER;
@@ -669,10 +681,6 @@ void Engine::Main::UpdateInGame()
 			break;
 		}
 	}
-
-	// Graphic
-	// TODO State based animation, to avoid animation overriding.
-	player->PlayAnim("idle");
 
 //Input Handling
 	if (isPhysicsInit) {
@@ -693,22 +701,25 @@ void Engine::Main::UpdateInGame()
 		playerOrient = Orientation::RIGHT;
 		xMov += characterSpeedFac;
 		player->SetFlipHorizontal(0);
-		player->PlayAnim("run");
+		if (isKeyPressedOnce == false) {
+			animState = AnimationState::RUN;
+			isKeyPressedOnce = true;
+		}
 		if (inputManager->IsKeyReleased("space")) {
-			player->PlayAnim("run_aim");
+			animState = AnimationState::RUN_AIM;
 			PlayerShoot();
 			if (inputManager->IsKeyPressed("up") && isFalling != true) {
 				PlayerJump();
 
-				player->PlayAnim("jump_aim");
+				animState = AnimationState::JUMP_AIM;
 			}
 		}
 		else if (inputManager->IsKeyPressed("up") && isFalling != true) {
 			PlayerJump();
 
-			player->PlayAnim("jump");
+			animState = AnimationState::JUMP;
 			if (inputManager->IsKeyReleased("space")) {
-				player->PlayAnim("jump_aim");
+				animState = AnimationState::JUMP_AIM;
 				PlayerShoot();
 			}
 		}
@@ -717,38 +728,102 @@ void Engine::Main::UpdateInGame()
 		playerOrient = Orientation::LEFT;
 		xMov -= characterSpeedFac;
 		player->SetFlipHorizontal(1);
-		player->PlayAnim("run");
+		if (isKeyPressedOnce == false) {
+			animState = AnimationState::RUN;
+			isKeyPressedOnce = true;
+		}
 		if (inputManager->IsKeyReleased("space")) {
-			player->PlayAnim("run_aim");
+			animState = AnimationState::RUN_AIM;
 			PlayerShoot();
 			if (inputManager->IsKeyPressed("up") && isFalling != true) {
 				PlayerJump();
 
-				player->PlayAnim("jump_aim");
+				animState = AnimationState::JUMP_AIM;
 			}
 		}
 		else if (inputManager->IsKeyPressed("up") && isFalling != true) {
 			PlayerJump();
 
-			player->PlayAnim("jump");
+			animState = AnimationState::JUMP;
 			if (inputManager->IsKeyReleased("space")) {
-				player->PlayAnim("jump_aim");
+				animState = AnimationState::JUMP_AIM;
 				PlayerShoot();
 			}
 		}
 	} else if (inputManager->IsKeyReleased("space")) {
-		player->PlayAnim("idle_aim");
+		animState = AnimationState::IDLE_AIM;
 		PlayerShoot();
 	}
 	else if (inputManager->IsKeyPressed("up") && isFalling != true) {
-		player->PlayAnim("jump");
+		animState = AnimationState::JUMP;
 
 		PlayerJump();
 
 		if (inputManager->IsKeyPressed("space")) {
-			player->PlayAnim("jump_aim");
+			animState = AnimationState::JUMP_AIM;
 			PlayerShoot();
 		}
+	}
+
+	// TODO World fall kill/respawn.
+	// TODO Smoother ai movement.
+	// TODO Enemy spawn lookat player.
+	if (animState == AnimationState::IDLE) {
+		player->PlayAnim("idle");
+	}
+	else if (animState == AnimationState::IDLE_AIM) {
+		player->PlayAnim("idle_aim");
+		if (idleAimWait > 60 * 10) {
+			animState = AnimationState::IDLE;
+			idleAimWait = 0;
+		}
+		else {
+			idleAimWait += GetGameTime();
+		}
+	}
+	else if (animState == AnimationState::RUN) {
+		if (isRunAim) {
+			if (runAimWait > runAimWaitMax) {
+				player->PlayAnim("run");
+				isKeyPressedOnce = false;
+				isRunAim = false;
+				runAimWait = 0;
+			}
+			else {
+				runAimWait += GetGameTime();
+			}
+		}
+		else {
+			player->PlayAnim("run");
+			if (runWait > 60 * 3) {
+				animState = AnimationState::IDLE;
+				isKeyPressedOnce = false;
+				runWait = 0;
+			}
+			else {
+				runWait += GetGameTime();
+			}
+		}
+	}
+	else if (animState == AnimationState::RUN_AIM) {
+		player->PlayAnim("run_aim");
+		isRunAim = true;
+		if (runAimWait > runAimWaitMax) {
+			animState = AnimationState::RUN;
+			isKeyPressedOnce = false;
+			isRunAim = false;
+			runAimWait = 0;
+		}
+		else {
+			runAimWait += GetGameTime();
+		}
+	}
+	else if (animState == AnimationState::JUMP) {
+		// This is updated on PhysicsUpdate() platform land checks.
+		player->PlayAnim("jump");
+	}
+	else if (animState == AnimationState::JUMP_AIM) {
+		player->PlayAnim("jump_aim");
 	}
 
 	UpdatePhysics();
@@ -836,15 +911,25 @@ void Main::UpdatePause()
 }
 
 void Main::UpdateGameover() {
+	mainMusic->Stop();
 	if (inputManager->IsKeyReleased("space")) {
 		gameState = GameState::GAME;
 		stateSwitchFlag = true;
+		mainMusic->Play(true);
 		DestroyInGame();
 	}
 }
 
 void Main::UpdatePhysics()
 {
+	// Hard world border
+	if (playerPos.x < 0 ) {
+		xMov = playerPos.x + 1;
+	}
+	else if (playerPos.x > setting->screenWidth - 34) {
+		xMov = playerPos.x - 1;
+	}
+
 	// Player Gravity
 	if (isFalling) {
 		if (yVelocity > maxYVel) {
@@ -853,7 +938,7 @@ void Main::UpdatePhysics()
 		else {
 			yVelocity = maxYVel;
 		}
-		cout << yVelocity << "\n";
+		//cout << yVelocity << "\n";
 	}
 	else if (isFalling == false) {
 		yVelocity = 0;
@@ -867,6 +952,7 @@ void Main::UpdatePhysics()
 	// TODO Horizontal collision checks
 	if (isFalling) {
 		for (Sprite* platform : platformList) {
+			// Character col checks.
 			if (platform->GetBoundingBox()->CollideWith(player->GetBoundingBox()))
 			{
 				// Anti-slide and floor correction
@@ -878,12 +964,14 @@ void Main::UpdatePhysics()
 				if (playLandSFX) {
 					sfxLand->Play(false);
 					playLandSFX = false;
-				}				
+				}
+
+				animState = AnimationState::RUN;
+
 				break;
 			}
 		}
 	}
-	// TODO: Do this for enemy??
 	// TODO: Figure out how to play sfxLand properly.
 	// When player walk off from platform, update the isFalling status.
 	else {
@@ -904,9 +992,9 @@ void Main::UpdatePhysics()
 	for (Sprite* platform : platformList) {
 		for (Enemy* enemy : enemyList) {
 			if (enemy->GetIsFalling()) {
-				Sprite* enemySprite = enemy->GetSpriteComponent();
+			Sprite* enemySprite = enemy->GetSpriteComponent();
 
-				vec2 enemyPos = enemySprite->GetPosition();
+			vec2 enemyPos = enemySprite->GetPosition();
 
 				if (platform->GetBoundingBox()->CollideWith(enemySprite->GetBoundingBox()))
 				{
@@ -925,7 +1013,6 @@ void Main::UpdatePhysics()
 		isFalling = true;
 		//cout << isFalling << endl;
 	}
-
 }
 
 void Main::DestroyPreMenu()
@@ -949,12 +1036,14 @@ void Main::DestroyMenu()
 
 void Main::DestroyInGame()
 {
-	// TODO: Proper Game destroy
+	enemyList.clear();
+	enemyLaserList.clear();
+	playerLaserList.clear();
 }
 
 Sprite* Main::CreatePlayer()
 {
-	playerTexture = new Texture("character.png");
+	playerTexture = new Texture("character_player.png");
 	player = new Sprite(playerTexture, defaultSpriteShader, defaultQuad);
 	player->SetNumXFrames(6);
 	player->SetNumYFrames(6);

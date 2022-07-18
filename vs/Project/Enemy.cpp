@@ -36,7 +36,7 @@ Enemy::~Enemy()
 	delete enemy;
 }
 
-void Enemy::Update(float deltaTime)
+void Enemy::Update(float deltaTime, list<Sprite*> &platformList, Sound* sfxLand)
 {
 	if (lifecycleState == GameObjectState::DEAD) {
 		return;
@@ -58,7 +58,7 @@ void Enemy::Update(float deltaTime)
 		behaviourFactor = rand() % 2;
 
 		if (behaviourFactor == 0) {
-			Idle();
+			Waiting();
 		}
 		else if (behaviourFactor == 1) {
 			Patrol();
@@ -69,7 +69,7 @@ void Enemy::Update(float deltaTime)
 		behaviourCounter += deltaTime;
 	}
 
-	UpdatePhysics(deltaTime);
+	UpdatePhysics(deltaTime, platformList, sfxLand);
 
 	enemy->Update(deltaTime);
 }
@@ -90,10 +90,20 @@ void Enemy::InitPhysics() {
 
 	isFalling = true;
 
+	playLandSFX = true;
+
 	isPhysicsInit = true;
 }
 
-void Enemy::UpdatePhysics(float deltaTime) {
+void Enemy::UpdatePhysics(float deltaTime, list<Sprite*> platformList, Sound* sfxLand) {
+	// Hard world border
+	if (pos.x < 0) {
+		xMov = pos.x + 1;
+	}
+	else if (pos.x > 1024 - 34) {
+		xMov = pos.x - 1;
+	}
+	
 	// State update
 	if (isFalling) {
 		if (yVelocity > maxYVel) {
@@ -111,20 +121,54 @@ void Enemy::UpdatePhysics(float deltaTime) {
 	yMov += yVelocity * deltaTime;
 	enemy->SetPosition(xMov, yMov);
 
+	if (isFalling) {
+		for (Sprite* platform : platformList) {
+			// Character col checks.
+			if (platform->GetBoundingBox()->CollideWith(enemy->GetBoundingBox()))
+			{
+				// Anti-slide and floor correction
+				enemy->SetPosition(pos.x, pos.y);
+
+				// and set jump to false and yVelovity to 0
+				yVelocity = 0;
+				isFalling = false;
+				if (playLandSFX) {
+					sfxLand->Play(false);
+					playLandSFX = false;
+				}
+				break;
+			}
+		}
+	}
+	// TODO: Figure out how to play sfxLand properly.
+	// When enemy walk off from platform, update the isFalling status.
+	else {
+		for (Sprite* platform : platformList) {
+			if (lastPos.x != pos.x) {
+				if (platform->GetBoundingBox()->CollideWith(enemy->GetBoundingBox()) == false)
+				{
+					isFalling = true;
+					break;
+				}
+			}
+			else {
+				break;
+			}
+		}
+	}
+
 	if (lastPos.y > pos.y) {
 		isFalling = true;
 	}
 }
 
-void Enemy::Idle()
+void Enemy::Waiting()
 {
-	cout << "idle";
 	enemy->PlayAnim("idle");
 }
 
 void Enemy::Patrol()
 {
-	cout << "patrol";
 	patrolMood = rand() % 2;
 
 	if (patrolMood == 0) {
@@ -208,4 +252,12 @@ bool Enemy::GetIsFalling() {
 
 void Enemy::SetIsFalling(bool factor) {
 	isFalling = factor;
+}
+
+vec2 Enemy::GetPos() {
+	return pos;
+}
+
+vec2 Enemy::GetLastPos() {
+	return lastPos;
 }
